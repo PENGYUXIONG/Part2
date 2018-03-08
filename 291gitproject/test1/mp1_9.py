@@ -132,8 +132,145 @@ def supervisor(user_id):
         supervisor(user_id)
 
 def dispatcher(user_id):
-        print("Select a service agreement:")
-        return
+    
+        while(True):
+                print("1. Create a service_fulfillments table. ")
+                print("2. Log off. ")
+                choise = input("Choose what do you want to do: ")
+
+                if (choise == '1'):
+                        #Select service
+                        query = "SELECT * from service_agreements where service_no = ?"
+                        #Make sure input exists in database 
+                        while(True):
+                                slct_Service_No = input("Select a service agreement (Service No): ")
+                                slctService = cursor.execute(query,(slct_Service_No,)).fetchall()
+                                if( len(slctService) != 0):
+                                        break
+                                else:
+                                        print("This is not an existing service agreement, please try another one. \n")
+
+
+                        #Select driver
+                        query = "SELECT * from drivers where pid = ?"
+                        #Make sure input exists in database 
+                        while(True):
+                                slct_Driver_Id = input("Select a driver (id): ")
+                                slctDriver = cursor.execute(query,(slct_Driver_Id,)).fetchall()
+                                if(len(slctDriver) != 0):
+                                        break
+                                else:
+                                        print("This is not an existing driver, please try another one. \n")
+
+                        #Check if the driver owns a truck
+                        query = "SELECT * from trucks where truck_id = ?"
+                        if(slctDriver[0][2] != None):
+                                slctTruck = cursor.execute(query,(slctDriver[0][2],)).fetchall()
+                                print("The driver's truck being select.")
+                        else:   
+                                while(True):
+                                        #Make sure input exists in database
+                                        slct_Truck_Id = input("Select a truck (id): ")
+                                        slctTruck = cursor.execute(query,(slct_Truck_Id,)).fetchall()
+                                        if(len(slctTruck) != 0):
+                                                #Make sure the truck is owned by company
+                                                query2 = '''SELECT * from trucks 
+                                                        where truck_id = ?
+                                                        and truck_id not in 
+                                                        (SELECT owned_truck_id FROM drivers WHERE owned_truck_id is not null)'''                
+                                                slctTruck = cursor.execute(query2,(slct_Truck_Id,)).fetchall()
+                                                if(len(slctTruck) != 0):
+                                                        break
+                                                else:
+                                                        print("This is not a truck owned by company, please try another one. \n")
+                                        else:
+                                                print("This is not an existing truck, please try another one. \n")
+
+
+                        #Auto fill pick up container
+                        query = '''
+                                SELECT c.container_id
+                                FROM containers c
+                                WHERE (SELECT MAX(date_time) FROM service_fulfillments s WHERE s.cid_pick_up = c.container_id)
+                                <
+                                (SELECT MAX(date_time) FROM service_fulfillments s WHERE s.cid_drop_off = c.container_id) 
+                                intersect
+                                select cid_drop_off
+                                from service_fulfillments sf, service_agreements sg
+                                where sf.service_no = sg.service_no
+                                and sg.location = ?
+                                '''                 
+
+                        slct_Container_Id = cursor.execute(query,(slctService[0][2],)).fetchall()
+                        if(len(slct_Container_Id) != 0):
+                                print("Pick-up-container automatically selected. ")
+                        else:
+                                print("No container at the loacation, Dunmmy container being select. ")
+                                slct_Container_Id = "NULLID"
+
+                        
+                        #Select drop off container
+                        query = '''
+                                SELECT c.container_id
+                                FROM containers c
+                                WHERE NOT EXISTS (SELECT *
+                                                FROM service_fulfillments s
+                                                WHERE s.cid_drop_off = c.container_id)
+                                UNION
+                                SELECT c.container_id
+                                FROM containers c
+                                WHERE (SELECT MAX(date_time) FROM service_fulfillments s WHERE s.cid_pick_up = c.container_id)
+                                >
+                                (SELECT MAX(date_time) FROM service_fulfillments s WHERE s.cid_drop_off = c.container_id) 
+                                intersect
+                                select container_id
+                                from container_waste_types
+                                where waste_type = ?
+                                except
+                                select container_id
+                                from containers
+                                where container_id = 'NULLID'
+
+                                '''
+                        
+                        #Get list of container that matches waste type
+                        containerList = cursor.execute(query,(slctService[0][3],)).fetchall()
+                        #Show list if available
+                        if(len(containerList) == 0):
+                                print("No containers available for drop off, Dummy container being select.")
+                                slct_Container_Id2 = [("NULLID",)]
+                        else:
+                                for row in containerList:
+                                        print(row[0]) 
+                        
+                                query = "SELECT * from containers where container_id = ?"
+                                while(True):
+                                        slct_Container_Id2 = input("Select a container (id) from list above to drop off: ")
+                                        if((slct_Container_Id2,) in containerList):
+                                                break
+                                        else:
+                                                print("This is not an container from list, please try another one. \n")
+
+                        
+                        while(True):
+                                date = input("Enter in the date in the form YYYY-MM-DD: ").replace(" ","")
+                                if(len(date) != 10 or date[4] != "-" or date[7] != "-" or not date.replace("-","").isdigit() ):
+                                        print("The date is not in format")
+                                else:
+                                        break
+
+                        
+                        #Create the fulfillments table
+                        query = "Insert into service_fulfillments values (?,?,?,?,?,?,?)"
+                        cursor.execute(query,(date,slctService[0][1],slct_Service_No,slctTruck[0][0],slct_Driver_Id,slct_Container_Id2,slct_Container_Id[0][0]))
+                        connection.commit()
+                        print("Table created! \n")
+
+                elif(choise == '2'):
+                        return
+                else:
+                        print("Please enter 1 or 2. \n")
+
 
 def driver(user_id):
     # get date range from the input
