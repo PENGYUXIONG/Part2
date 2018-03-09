@@ -137,7 +137,7 @@ CREATE TABLE service_fulfillments (
 -- users
 -- INSERT INTO users VALUES('34725','Account Manager','000','001');
 -- INSERT INTO users VALUES('55263','Supervisor','100','101');
--- INSERT INTO users VALUES('43743','Driver','300','301');
+INSERT INTO users VALUES('43743','Driver','300','301');
 -- INSERT INTO users VALUES('40000','Dispatcher','400','401');
 
 --Test for login (dispatcher)
