@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import collections
 connection = None
 cursor = None
 
@@ -37,9 +38,27 @@ def directory():
         print("\n")
         return path
 
+def attributes_to_list(attributes):
+        return attributes.split(",")
 
+def fd_to_list(fd):
+        fd = list(fd.split("; "))
+        output = []
+        for i in fd:
+                j,k = i.split("=>")
+                j = j[1:-1]
+                k = k[1:-1]
+                output.append([j,k])
+        return output
 
 def bcnf(inputRelationDict):
+        print("\nSchemas:")
+        for i,j in enumerate(inputRelationDict):
+                print(str(i+1)+": "+j)
+        option = int(input("Select schema: "))-1
+        attributes = attributes_to_list(inputRelationDict[list(inputRelationDict.keys())[option]][0])
+        fd = fd_to_list(inputRelationDict[list(inputRelationDict.keys())[option]][1])
+        
         
         return
 
@@ -61,7 +80,7 @@ def main_interface():
                         else:
                                 connect(directory())
                         query = cursor.execute("Select Name,Attributes,FDs,hasInstance from InputRelationSchemas;").fetchall()
-                        inputRelationDict = dict()
+                        inputRelationDict = collections.OrderedDict()
                         for i in query:
                                 inputRelationDict[i[0]] = [i[1],i[2],i[3]]
                         option = input("1: Perform BCNF on schema\n2: Compute attribute closure on schema\n3: Determine equivalency on two sets of functional dependencies\n0: Exit\nSelect option: ")
