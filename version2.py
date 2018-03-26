@@ -111,6 +111,13 @@ def bcnf(inputRelationDict):
                         unnecessary.append(p0)
         for r in reversed(unnecessary):
                 fd.pop(r)
+        s = len(fd) - 1
+        while s >= 0:
+                for t0,t in enumerate(fd):
+                        if set(fd[s][0]) == set(t[0]) and s != t0:
+                                t[1] += fd[s][1]
+                                fd.pop(s)
+                s -= 1
         print(fd)
         return
 
