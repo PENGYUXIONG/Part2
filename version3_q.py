@@ -144,26 +144,65 @@ def equivalence(inputRelationDict):
         for name in slctNameListF2:
                 print(name)
 
-        # collect fd
-        fdStringF1 = ""
-        fdStringF2 = ""
+        # # collect fd
+        # fdStringF1 = ""
+        # fdStringF2 = ""
         
-        # collect fd of F1
-        for name in slctNameListF1:
-                fdStringF1 = fdStringF1 + inputRelationDict[name][1] + ";"
+        # # collect fd of F1
+        # for name in slctNameListF1:
+        #         fdStringF1 = fdStringF1 + inputRelationDict[name][1] + ";"
 
-        # collect fd of F2
-        for name in slctNameListF2:
-                fdStringF2 = fdStringF2 + inputRelationDict[name][1] + ";"
+        # # collect fd of F2
+        # for name in slctNameListF2:
+        #         fdStringF2 = fdStringF2 + inputRelationDict[name][1] + ";"
 
         print(slctNameListF1)
-        print(fdStringF1)
+        print(union(slctNameListF1))
         print(slctNameListF2)
-        print(fdStringF2)
+        print(union(slctNameListF2))
+
+        
 
 
 
         return 
+
+
+def union(schemaList):
+        fdList = list()
+        for sch in schemaList:
+            cursor.execute("SELECT FDs FROM InputRelationSchemas WHERE Name = :sch", {"sch":sch})
+            List = cursor.fetchall()[0][0].split(";")
+            for i in List:
+                j,k = i.split("=>")
+                j = set(j.strip()[1:-1].split(','))
+                k = set(k.strip()[1:-1].split(','))
+
+                #if not empty
+                if len(fdList) != 0:
+                        # check if already in list 
+                        boolIn = False
+                        for fdIndex in range(0,len(fdList)):
+                                if j == fdList[fdIndex][0]:
+                                        fdList[fdIndex][1].update(k)
+                                        boolIn = True
+                                        break
+                        # if not in, add
+                        if boolIn == False:
+                                fdList.append([j,k])
+                else:                        
+                        fdList.append([j,k])
+
+        return fdList
+
+
+
+def TEST():
+        # testSet = {'a','b','c'}
+        # testSet.update({'b','c','d'})
+        # print(testSet)
+        testList = []
+        print(testList[0])
 
 def equivalence_user_input_collection(schemaNameList,index,F):
         slctNameList = list()
@@ -234,6 +273,8 @@ def main_interface():
 
 def main():
         global connection, cursor        
+
+        # TEST()
 
         main_interface()
         connection.close()
