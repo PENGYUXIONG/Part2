@@ -144,15 +144,35 @@ def equivalence(inputRelationDict):
         for name in slctNameListF2:
                 print(name)
 
-          
-                        
+        # collect fd
+        fdStringF1 = ""
+        fdStringF2 = ""
         
+        # collect fd of F1
+        for name in inputRelationDict:
+                # search for name from list
+                if len(slctNameListF1) == 0:
+                        break
+                elif name in slctNameListF1:
+                        fdStringF1 = fdStringF1 + inputRelationDict[name][1] + '; '
+                        slctNameListF1.remove(name)
 
-        
-        # schemaName = input("Enter the schema")
-        # for schema in inputRelationDict:
-        #         print(schema)
-        #         print(inputRelationDict[schema])
+        # collect fd of F2
+        for name in inputRelationDict:
+                # search for name from list
+                if len(slctNameListF2) == 0:
+                        break
+                elif name in slctNameListF2:
+                        fdStringF2 = fdStringF2 + inputRelationDict[name][1] + '; '
+                        slctNameListF2.remove(name)
+
+        print(slctNameListF1)
+        print(fdStringF1)
+        print(slctNameListF2)
+        print(fdStringF2)
+
+
+
         return 
 
 def equivalence_user_input_collection(schemaNameList,index,F):
