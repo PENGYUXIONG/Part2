@@ -149,22 +149,12 @@ def equivalence(inputRelationDict):
         fdStringF2 = ""
         
         # collect fd of F1
-        for name in inputRelationDict:
-                # search for name from list
-                if len(slctNameListF1) == 0:
-                        break
-                elif name in slctNameListF1:
-                        fdStringF1 = fdStringF1 + inputRelationDict[name][1] + '; '
-                        slctNameListF1.remove(name)
+        for name in slctNameListF1:
+                fdStringF1 = fdStringF1 + inputRelationDict[name][1] + ";"
 
         # collect fd of F2
-        for name in inputRelationDict:
-                # search for name from list
-                if len(slctNameListF2) == 0:
-                        break
-                elif name in slctNameListF2:
-                        fdStringF2 = fdStringF2 + inputRelationDict[name][1] + '; '
-                        slctNameListF2.remove(name)
+        for name in slctNameListF2:
+                fdStringF2 = fdStringF2 + inputRelationDict[name][1] + ";"
 
         print(slctNameListF1)
         print(fdStringF1)
