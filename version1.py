@@ -16,7 +16,7 @@ def connect(path):
         cursor = connection.cursor()
         print('Done')
         #Create and populate table is the database using 'init.sql' (from eclass)
-        
+
 
         cursor.execute(' PRAGMA foreign_keys=ON; ')
         #print("Importing table ... ", end = '')
@@ -58,15 +58,42 @@ def bcnf(inputRelationDict):
         option = int(input("Select schema: "))-1
         attributes = attributes_to_list(inputRelationDict[list(inputRelationDict.keys())[option]][0])
         fd = fd_to_list(inputRelationDict[list(inputRelationDict.keys())[option]][1])
-        
-        
+
+
         return
 
 def closure(inputRelationDict):
+        attributes = input("enter the attributes:\n (seperate with a comma between each attribute)\n").split(",")
+
+        cursor.execute("SELECT Name FROM InputRelationSchemas")
+
+        schemas = cursor.fetchall()
+        for i in range(len(schemas)):
+            print(str(i+1) + ". " + schemas[i][0])
+
+        Choices = input("Select the schema(s) by enter the number\n").split(",")
+
+        Schemas = []
+        for choice in Choices:
+            Schemas.append(schemas[int(choice)-1][0])
+
+        att_check = []
+        for att in attributes:
+            Check = False
+            for sch in Schemas:
+                cursor.execute("SELECT Attributes FROM InputRelationSchemas WHERE Attributes like ? and Name = ?", ('%'+att+'%', sch))
+                con = cursor.fetchone()
+                if con != None:
+                    Check = True
+            att_check.append(Check)
+        if False in att_check:
+            print("certain attributes not inside selected schemas")
+            return
+        
         return
 
 def equivalence(inputRelationDict):
-        return 
+        return
 
 def main_interface():
         while True:
@@ -93,11 +120,11 @@ def main_interface():
                         elif option == '3':
                                 equivalence(inputRelationDict)
                 print("Invalid key\n")
-        return  
+        return
 
 
 def main():
-        global connection, cursor        
+        global connection, cursor
 
         main_interface()
         connection.close()
