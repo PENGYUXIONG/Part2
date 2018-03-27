@@ -62,23 +62,39 @@ def bcnf(inputRelationDict):
 
         return
 
-def union(Schemas):
-        DFs = dict()
-        for sch in Schemas:
+def union(schemaList):
+        fdList = list()
+        for sch in schemaList:
             cursor.execute("SELECT FDs FROM InputRelationSchemas WHERE Name = :sch", {"sch":sch})
             List = cursor.fetchall()[0][0].split(";")
             for i in List:
                 j,k = i.split("=>")
-                j = j.strip()[1:-1].replace(",","")
-                k = k.strip()[1:-1].replace(",","")
-                DFs[j] = k
-        return DFs
+                j = set(j.strip()[1:-1].split(','))
+                k = set(k.strip()[1:-1].split(','))
 
-    
+                #if not empty
+                if len(fdList) != 0:
+                        # check if already in list
+                        boolIn = False
+                        for fdIndex in range(0,len(fdList)):
+                                if j == fdList[fdIndex][0]:
+                                        fdList[fdIndex][1].update(k)
+                                        boolIn = True
+                                        break
+                        # if not in, add
+                        if boolIn == False:
+                                fdList.append([j,k])
+                else:
+                        fdList.append([j,k])
+        return fdList
+
 
 def closure(inputRelationDict):
-        attributes = input("enter the attributes:\n (seperate with a comma between each attribute)\n").split(",")
-
+        Attributes = input("enter the attributes:\n (seperate with a comma between each attribute)\n").split(",")
+        attributes = []
+        for i in Attributes:
+            attributes.append(set(i))
+        print(attributes)
         cursor.execute("SELECT Name FROM InputRelationSchemas")
 
         schemas = cursor.fetchall()
@@ -92,21 +108,28 @@ def closure(inputRelationDict):
             Schemas.append(schemas[int(choice)-1][0])
 
         att_check = []
-        for att in attributes:
-            Check = False
-            for sch in Schemas:
-                cursor.execute("SELECT Attributes FROM InputRelationSchemas WHERE Attributes like ? and Name = ?", ('%'+att+'%', sch))
-                con = cursor.fetchone()
-                if con != None:
-                    Check = True
-            att_check.append(Check)
+        for attribute in attributes:
+            for att in attribute:
+                Check = False
+                for sch in Schemas:
+                    cursor.execute("SELECT Attributes FROM InputRelationSchemas WHERE Attributes like ? and Name = ?", ('%'+att+'%', sch))
+                    con = cursor.fetchone()
+                    if con != None:
+                        Check = True
+                att_check.append(Check)
         if False in att_check:
             print("certain attributes not inside selected schemas")
             return
-        DFs = union(Schemas)
-        print(DFs)
+        FDs = union(Schemas)
+        calculate_closure(FDs, attributes)
 
         return
+
+def calculate_closure(FDs, attributes):
+        
+        return
+
+
 
 def equivalence(inputRelationDict):
         return
