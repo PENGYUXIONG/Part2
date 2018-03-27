@@ -62,6 +62,20 @@ def bcnf(inputRelationDict):
 
         return
 
+def union(Schemas):
+        DFs = dict()
+        for sch in Schemas:
+            cursor.execute("SELECT FDs FROM InputRelationSchemas WHERE Name = :sch", {"sch":sch})
+            List = cursor.fetchall()[0][0].split(";")
+            for i in List:
+                j,k = i.split("=>")
+                j = j.strip()[1:-1].replace(",","")
+                k = k.strip()[1:-1].replace(",","")
+                DFs[j] = k
+        return DFs
+
+    
+
 def closure(inputRelationDict):
         attributes = input("enter the attributes:\n (seperate with a comma between each attribute)\n").split(",")
 
@@ -89,7 +103,9 @@ def closure(inputRelationDict):
         if False in att_check:
             print("certain attributes not inside selected schemas")
             return
-        
+        DFs = union(Schemas)
+        print(DFs)
+
         return
 
 def equivalence(inputRelationDict):
