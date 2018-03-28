@@ -90,11 +90,7 @@ def union(schemaList):
 
 
 def closure(inputRelationDict):
-        Attributes = input("enter the attributes:\n (seperate with a comma between each attribute)\n").split(",")
-        attributes = []
-        for i in Attributes:
-            attributes.append(set(i))
-        print(attributes)
+        attributes = set(input("enter the attributes:\n (seperate with a comma between each attribute)\n").split(","))
         cursor.execute("SELECT Name FROM InputRelationSchemas")
 
         schemas = cursor.fetchall()
@@ -108,26 +104,45 @@ def closure(inputRelationDict):
             Schemas.append(schemas[int(choice)-1][0])
 
         att_check = []
-        for attribute in attributes:
-            for att in attribute:
-                Check = False
-                for sch in Schemas:
-                    cursor.execute("SELECT Attributes FROM InputRelationSchemas WHERE Attributes like ? and Name = ?", ('%'+att+'%', sch))
-                    con = cursor.fetchone()
-                    if con != None:
-                        Check = True
-                att_check.append(Check)
+        for att in attributes:
+            Check = False
+            for sch in Schemas:
+                cursor.execute("SELECT Attributes FROM InputRelationSchemas WHERE Attributes like ? and Name = ?", ('%'+att+'%', sch))
+                con = cursor.fetchone()
+                if con != None:
+                    Check = True
+            att_check.append(Check)
         if False in att_check:
             print("certain attributes not inside selected schemas")
             return
         FDs = union(Schemas)
-        calculate_closure(FDs, attributes)
+        closure = attributes
+        closure = calculate_closure(FDs, attributes, closure)
+        attributes = sorted(list(attributes))
+        closure = sorted(list(closure))
+        print("\nattributes: {" , end = "")
+        for i in range(0, len(attributes)-1):
+            print(attributes[i] + ',', end = "")
+        print(attributes[-1] + "}")
 
+        print("\nclosure: {", end = "")
+        for i in range(0, len(closure)-1):
+            print(closure[i] + ',', end = "")
+        print(closure[-1] + "}")
         return
 
-def calculate_closure(FDs, attributes):
-        
-        return
+def calculate_closure(FDs, attributes, closure):
+        change = False
+        for j in FDs:
+            if j[0].issubset(attributes) and j[1].issubset(attributes) == False:
+                closure = closure | j[1]
+                change = True
+        if change == False:
+            return closure
+        attributes = attributes | closure
+        closure = calculate_closure(FDs, attributes, closure)
+
+        return closure
 
 
 
