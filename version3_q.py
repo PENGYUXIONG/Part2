@@ -144,26 +144,49 @@ def equivalence(inputRelationDict):
         for name in slctNameListF2:
                 print(name)
 
-        # # collect fd
-        # fdStringF1 = ""
-        # fdStringF2 = ""
+
+        # union their fd
+        fdListF1 = union(slctNameListF1)
+        fdListF2 = union(slctNameListF2)
+        # print(fdListF1)
+        # print(fdListF2)
+
+        # print(calculate_closure(fdListF1, {'A','B'}, {'A','B'}))
+        # print(calculate_closure(fdListF2, {'A','B'}, {'A','B'}))
+
+        # compare F1 to F2
+        boolAllInF1 = True
+        for fd in fdListF1:
+                # if not directly match
+                if fd not in fdListF2:
+                        # check closure of F2
+                        closure = calculate_closure(fdListF2,fd[0],fd[0])
+                        # if not in closure
+                        if not fd[1].issubset(closure):
+                                boolAllInF1 = False
+                                print("F1",fd)
+                                break
         
-        # # collect fd of F1
-        # for name in slctNameListF1:
-        #         fdStringF1 = fdStringF1 + inputRelationDict[name][1] + ";"
+        # compare F2 to F1
+        boolAllInF2 = True
+        for fd in fdListF2:
+                # if not directly match
+                if fd not in fdListF1:
+                        # check closure of F1
+                        closure = calculate_closure(fdListF1,fd[0],fd[0])
+                        # if not in closure
+                        if not fd[1].issubset(closure):
+                                boolAllInF2 = False
+                                print("F2",fd)
+                                break
 
-        # # collect fd of F2
-        # for name in slctNameListF2:
-        #         fdStringF2 = fdStringF2 + inputRelationDict[name][1] + ";"
+        # print(boolAllInF1,boolAllInF2)
+        if boolAllInF1 == True and boolAllInF2 == True:
+                result = "ARE"
+        else:
+                result = "ARE NOT"
 
-        print(slctNameListF1)
-        print(union(slctNameListF1))
-        print(slctNameListF2)
-        print(union(slctNameListF2))
-
-        
-
-
+        print("Two sets of functional dependencies F1 and F2 " + result + " equivalent. ")
 
         return 
 
@@ -195,6 +218,18 @@ def union(schemaList):
 
         return fdList
 
+def calculate_closure(FDs, attributes, closure):
+        change = False
+        for j in FDs:
+            if j[0].issubset(attributes) and j[1].issubset(attributes) == False:
+                closure = closure | j[1]
+                change = True
+        if change == False:
+            return closure
+        attributes = attributes | closure
+        closure = calculate_closure(FDs, attributes, closure)
+
+        return closure
 
 
 def TEST():
