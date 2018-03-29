@@ -7,12 +7,12 @@ cursor = None
 
 def connect(path):
         if os.path.exists(path) == False:
-                return False        
+                return False
         global connection, cursor
 
         #Initialize the global variable 'connection' with a connection to the dadabase specified by 'path'
         print("Making connection to database ... ", end = '')
-        
+
         connection = sqlite3.connect(path)
         print('Done')
         #Initialize the global variable 'cursor' with a cursor to the database you just connected
@@ -20,7 +20,7 @@ def connect(path):
         cursor = connection.cursor()
         print('Done')
         #Create and populate table is the database using 'init.sql' (from eclass)
-        
+
 
         cursor.execute(' PRAGMA foreign_keys=ON; ')
         #print("Importing table ... ", end = '')
@@ -115,20 +115,59 @@ def bcnf(inputRelationDict):
         return
 
 def closure(inputRelationDict):
+        attributes = set(input("enter the attributes:\n (seperate with a comma between each attribute)\n").split(","))
+        cursor.execute("SELECT Name FROM InputRelationSchemas")
+
+        schemas = cursor.fetchall()
+        for i in range(len(schemas)):
+            print(str(i+1) + ". " + schemas[i][0])
+
+        Choices = input("Select the schema(s) by enter the number\n").split(",")
+
+        Schemas = []
+        for choice in Choices:
+            Schemas.append(schemas[int(choice)-1][0])
+
+        att_check = []
+        for att in attributes:
+            Check = False
+            for sch in Schemas:
+                cursor.execute("SELECT Attributes FROM InputRelationSchemas WHERE Attributes like ? and Name = ?", ('%'+att+'%', sch))
+                con = cursor.fetchone()
+                if con != None:
+                    Check = True
+            att_check.append(Check)
+        if False in att_check:
+            print("certain attributes not inside selected schemas")
+            return
+        FDs = union(Schemas)
+        closure = attributes
+        closure = calculate_closure(FDs, attributes, closure)
+        attributes = sorted(list(attributes))
+        closure = sorted(list(closure))
+        print("\nattributes: {" , end = "")
+        for i in range(0, len(attributes)-1):
+            print(attributes[i] + ',', end = "")
+        print(attributes[-1] + "}")
+
+        print("\nclosure: {", end = "")
+        for i in range(0, len(closure)-1):
+            print(closure[i] + ',', end = "")
+        print(closure[-1] + "}")
         return
 
 def equivalence(inputRelationDict):
         #User selecting schema
         print("\nSchemas' name in InputRelationSchemas:")
 
-        # list of schemas for selecting 
+        # list of schemas for selecting
         schemaNameList = list()
         index = int(1)
         for schema in inputRelationDict:
                 schemaNameList.append(schema)
                 print(index,": ",schema)
                 index += 1
-        
+
         schemaNameList.append("Exit")
         print(index,": ","Exit")
 
@@ -166,7 +205,7 @@ def equivalence(inputRelationDict):
                                 boolAllInF1 = False
                                 print("F1",fd)
                                 break
-        
+
         # compare F2 to F1
         boolAllInF2 = True
         for fd in fdListF2:
@@ -188,7 +227,7 @@ def equivalence(inputRelationDict):
 
         print("Two sets of functional dependencies F1 and F2 " + result + " equivalent. ")
 
-        return 
+        return
 
 
 def union(schemaList):
@@ -203,7 +242,7 @@ def union(schemaList):
 
                 #if not empty
                 if len(fdList) != 0:
-                        # check if already in list 
+                        # check if already in list
                         boolIn = False
                         for fdIndex in range(0,len(fdList)):
                                 if j == fdList[fdIndex][0]:
@@ -213,7 +252,7 @@ def union(schemaList):
                         # if not in, add
                         if boolIn == False:
                                 fdList.append([j,k])
-                else:                        
+                else:
                         fdList.append([j,k])
 
         return fdList
@@ -264,7 +303,7 @@ def equivalence_user_input_collection(schemaNameList,index,F):
                                                 break
                                 # a valid schema name
                                 else:
-                                        slctNameList.append(schemaNameList[slctIndex - 1]) 
+                                        slctNameList.append(schemaNameList[slctIndex - 1])
         return slctNameList
 
 
@@ -281,7 +320,7 @@ def main_interface():
                                         if connect(name) != False:
                                                 break
                                         print("That is an invalid database name.")
-                                        
+
 
                         else:
                                 connect(directory())
@@ -303,11 +342,11 @@ def main_interface():
                                 print("Invalid key\n")
                 else:
                         print("Invalid key\n")
-        return  
+        return
 
 
 def main():
-        global connection, cursor        
+        global connection, cursor
 
         # TEST()
 
