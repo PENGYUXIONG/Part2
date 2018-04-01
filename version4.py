@@ -145,9 +145,9 @@ def bcnf(inputRelationDict):
                                 attributes[i] = attributes[i] - t
                                 fd.append([u])
                                 attributes.append(u[0].union(u[1]))
-                        else:        
+                        else:
                                 j += 1
-                        
+
                 i += 1
         for j,k in enumerate(fd):
                 output_attributes = sorted(list(attributes[j]))
@@ -159,11 +159,12 @@ def bcnf(inputRelationDict):
                                 functionalDependencies += "{"+",".join(sorted(list(l[0])))+"}=>{"+",".join(sorted(list(l[1])))+"}; "
                 functionalDependencies = functionalDependencies[:-2]
                 cursor.execute("Insert into OutputRelationSchemas values (?,?,?)",[name,outputAttributes,functionalDependencies])
-        query = cursor.execute("Select * from OutputRelationSchemas").fetchall()       
-        
+        query = cursor.execute("Select * from OutputRelationSchemas").fetchall()
+
         return
 
 def closure(inputRelationDict):
+        # get input attributes
         attributes = set(input("enter the attributes:\n (seperate with a comma between each attribute)\n").split(","))
         cursor.execute("SELECT Name FROM InputRelationSchemas")
 
@@ -171,12 +172,14 @@ def closure(inputRelationDict):
         for i in range(len(schemas)):
             print(str(i+1) + ". " + schemas[i][0])
 
+        # get input schemas
         Choices = input("Select the schema(s) by enter the number\n").split(",")
 
         Schemas = []
         for choice in Choices:
             Schemas.append(schemas[int(choice)-1][0])
 
+        # check if inputs are valid
         att_check = []
         for att in attributes:
             Check = False
@@ -189,8 +192,10 @@ def closure(inputRelationDict):
         if False in att_check:
             print("certain attributes not inside selected schemas")
             return
+        # get union for the FDs
         FDs = union(Schemas)
         closure = attributes
+        # take closure calculation
         closure = calculate_closure(FDs, attributes, closure)
         attributes = sorted(list(attributes))
         closure = sorted(list(closure))
@@ -307,13 +312,17 @@ def union(schemaList):
         return fdList
 
 def calculate_closure(FDs, attributes, closure):
+        # boolean to see if there is more attribute to add
         change = False
+        # check each layer
         for j in FDs:
             if set(j[0]).issubset(attributes) and set(j[1]).issubset(attributes) == False:
                 closure = closure | j[1]
                 change = True
+        # not change means the search is over, return result
         if change == False:
             return closure
+        # add attributes in 
         attributes = attributes | closure
         closure = calculate_closure(FDs, attributes, closure)
 

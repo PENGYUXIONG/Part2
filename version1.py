@@ -116,6 +116,7 @@ def closure(inputRelationDict):
             print("certain attributes not inside selected schemas")
             return
         FDs = union(Schemas)
+        print(FDs)
         closure = attributes
         closure = calculate_closure(FDs, attributes, closure)
         attributes = sorted(list(attributes))
