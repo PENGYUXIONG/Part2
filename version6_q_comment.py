@@ -222,104 +222,125 @@ def closure(inputRelationDict):
         print(closure[-1] + "}")
         return
 
+#
+# The main function for check equivalence for F1 anf F2
+#
 def equivalence(inputRelationDict):
         #User selecting schema
         print("\nSchemas' name in InputRelationSchemas:")
 
-        # list of schemas for selecting
+        # List for listing schemas for user to select
         schemaNameList = list()
         index = int(1)
+        # Create schema list and print out at same time
         for schema in inputRelationDict:
                 schemaNameList.append(schema)
                 print(index,": ",schema)
                 index += 1
 
+        # Insert Exit option to list
         schemaNameList.append("Exit")
         print(index,": ","Exit")
 
-        # collect user input
+        # collect user input using function(prevent too much repeated code)
         slctNameListF1 = equivalence_user_input_collection(schemaNameList,index,"F1")
         slctNameListF2 = equivalence_user_input_collection(schemaNameList,index,"F2")
 
-        # show user what they select
-        print("Schema in F1:")
+        # show user what they select for F1
+        print("Schema(s) in F1:")
         for name in slctNameListF1:
                 print(name)
-        print("Schema in F2:")
+        # show user what they select for F2
+        print("Schema(s) in F2:")
         for name in slctNameListF2:
                 print(name)
 
-
-        # union their fd
+        # union FDs for F1 and F2 using function(prevent too much repeated code) 
         fdListF1 = union(slctNameListF1)
         fdListF2 = union(slctNameListF2)
-        # print(fdListF1)
-        # print(fdListF2)
 
-        # print(calculate_closure(fdListF1, {'A','B'}, {'A','B'}))
-        # print(calculate_closure(fdListF2, {'A','B'}, {'A','B'}))
-
-        # compare F1 to F2
+        # compare FDs in F1 to F2
+        # Set default result as True
         boolAllInF1 = True
+        # Check every FD in F1
         for fd in fdListF1:
-                # if not directly match
+                # Check whether FD directly present in F2
+                # -Case: not directly match -> check closure from F2
                 if fd not in fdListF2:
-                        # check closure of F2
+                        # Calculate closure from F2
                         closure = calculate_closure(fdListF2,fd[0],fd[0])
-                        # if not in closure
+                        # Check whether FD present in closure
+                        # -Case: not in closure -> save result as False
                         if not fd[1].issubset(closure):
                                 boolAllInF1 = False
                                 print("F1",fd)
                                 break
 
-        # compare F2 to F1
+        # compare FDs in F2 to F1
+        # Set default result as True
         boolAllInF2 = True
+        # Check every FD in F2
         for fd in fdListF2:
-                # if not directly match
+                # Check whether FD directly present in F1
+                # -Case: not directly match -> check closure from F1
                 if fd not in fdListF1:
-                        # check closure of F1
+                        # Calculate closure from F1
                         closure = calculate_closure(fdListF1,fd[0],fd[0])
-                        # if not in closure
+                        # Check whether FD present in closure
+                        # -Case: not in closure -> save result as False
                         if not fd[1].issubset(closure):
                                 boolAllInF2 = False
                                 print("F2",fd)
                                 break
 
-        # print(boolAllInF1,boolAllInF2)
+        # Check result
+        # -Case: True and True -> equivalent
         if boolAllInF1 == True and boolAllInF2 == True:
                 result = "ARE"
+        # -Case: any False exist -> NOT equivalent
         else:
                 result = "ARE NOT"
 
+        # Print out solution
         print("Two sets of functional dependencies F1 and F2 " + result + " equivalent. ")
 
         return
 
-
+#
+# The function to union user selected FDs together
+#
 def union(schemaList):
+        # LIst for return
         fdList = list()
+        # Check every schema in list which possible to union 
         for sch in schemaList:
-            cursor.execute("SELECT FDs FROM InputRelationSchemas WHERE Name = :sch", {"sch":sch})
-            List = cursor.fetchall()[0][0].split(";")
-            for i in List:
-                j,k = i.split("=>")
-                j = set(j.strip()[1:-1].split(','))
-                k = set(k.strip()[1:-1].split(','))
+                # Get FDs from "InputRelationSchemas" using sqlite
+                cursor.execute("SELECT FDs FROM InputRelationSchemas WHERE Name = :sch", {"sch":sch})
+                List = cursor.fetchall()[0][0].split(";")
+                # Read FD format into set
+                # Set format example: "{A,C}=>{B};" -> [{'A','C'},{'B'}]
+                for i in List:
+                        j,k = i.split("=>")
+                        j = set(j.strip()[1:-1].split(','))
+                        k = set(k.strip()[1:-1].split(','))
 
-                #if not empty
-                if len(fdList) != 0:
-                        # check if already in list
-                        boolIn = False
-                        for fdIndex in range(0,len(fdList)):
-                                if j == fdList[fdIndex][0]:
-                                        fdList[fdIndex][1].update(k)
-                                        boolIn = True
-                                        break
-                        # if not in, add
-                        if boolIn == False:
+                        # Check whether list is empty to prevent index out of range
+                        # -Case: not empty -> continue
+                        if len(fdList) != 0:
+                                boolIn = False
+                                # check whether FD exist in list
+                                # -Case: eixst -> update FD                               
+                                for fdIndex in range(0,len(fdList)):
+                                        if j == fdList[fdIndex][0]:
+                                                fdList[fdIndex][1].update(k)
+                                                boolIn = True
+                                                break
+                                # -Case not exist -> add to list
+                                if boolIn == False:
+                                        fdList.append([j,k])
+                        # -Case: empty -> add FD to list
+                        else:
                                 fdList.append([j,k])
-                else:
-                        fdList.append([j,k])
 
         return fdList
 
@@ -340,38 +361,42 @@ def calculate_closure(FDs, attributes, closure):
 
         return closure
 
-
-def TEST():
-        # testSet = {'a','b','c'}
-        # testSet.update({'b','c','d'})
-        # print(testSet)
-        testList = []
-        print(testList[0])
-
+#
+# The function to collect user input(schemas) for equivalence
+#
 def equivalence_user_input_collection(schemaNameList,index,F):
+        # The list for return
         slctNameList = list()
 
+        # Ask user to continue enter schema until select Exit
         while(True):
-                ## print("TESTING--slctNameList:",slctNameList)
+                # Ask user to enter index of schema
                 print("Enter index to select schema for",F,"(or exit):")
                 slctIndex = int(input())
-                # check if input out of index
+
+                # Check whether user choose valid index
+                # -Case: index is not valid -> back to loop
                 if (slctIndex <= 0 or slctIndex > index):
                         print("Invalid index, choose again")
+                # -Case: index is valid -> continue check
                 else:
-                        ## print("TESTING--slctName:",schemaNameList[slctIndex - 1])
-                        # check if input is chose before
+                        # check whether schema chose before
+                        # -Case: schema already chose -> back to loop
                         if (schemaNameList[slctIndex - 1] in slctNameList):
                                 print("The schema already selected, choose another one.")
+                        # -Case: non-repeated index -> continue check
                         else:
-                                # check if input is Exit
+                                # check whether user choose Exit
+                                # -Case: input is Exit -> continue check
                                 if (schemaNameList[slctIndex - 1] == "Exit"):
                                         # if Exit, have user choose any schema
+                                        # -Case: no schema chose -> back to loop
                                         if (len(slctNameList) == 0):
                                                 print("You haven't select any schema yet.")
+                                        # -Case: user have chosen schemas -> exit
                                         else:
                                                 break
-                                # a valid schema name
+                                # -Case: input is a valid schema name -> add to list
                                 else:
                                         slctNameList.append(schemaNameList[slctIndex - 1])
         return slctNameList
@@ -417,8 +442,6 @@ def main_interface():
 
 def main():
         global connection, cursor
-
-        # TEST()
 
         main_interface()
         connection.close()
