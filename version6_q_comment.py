@@ -78,10 +78,10 @@ def bcnf(inputRelationDict):
         attributes = [set(attributes_to_list(inputRelationDict[list(inputRelationDict.keys())[option]][0]))]
         #as above but with functional dependencies
         fd = [fd_to_list(inputRelationDict[list(inputRelationDict.keys())[option]][1])]
+        #stores fd to check if preserved
+        fdCopy = list(fd[0])
         #i is the index of table that is under examination
         i = 0
-        #will turn to true if the decomposition is not dependency preserving
-        d = False
         #will turn to true if there is a change in the list of tables
         change = False
         #goes through every table stored
@@ -99,6 +99,14 @@ def bcnf(inputRelationDict):
                                 t = fd[i][j][1] - fd[i][j][0]
                                 #removes fd at fd[i][j]
                                 u = fd[i].pop(j)
+                                #removes attributes in table that were part of RHS-LHS of the fd
+                                attributes[i] = attributes[i] - t
+                                #creates new table with the examined fd in it
+                                fd.append([u])
+                                #acknowledges that a change in stored tables was made
+                                change = True
+                                #stores attruibutes for new table
+                                attributes.append(u[0].union(u[1]))                                
                                 #k is index of fd in table
                                 k = 0
                                 #goes through every fd in table
@@ -112,17 +120,6 @@ def bcnf(inputRelationDict):
                                         #increments k
                                         else:
                                                 k += 1
-                                #removes attributes in table that were part of RHS-LHS of the fd
-                                attributes[i] = attributes[i] - t
-                                #creates new table with the examined fd in it
-                                fd.append([u])
-                                #acknowledges that a change in stored tables was made
-                                change = True
-                                #stores attruibutes for new table
-                                attributes.append(u[0].union(u[1]))
-                                #******** in progress *********
-                                #if closure1.union(closure2) != s:
-                                        #d = True
                         #increments index if s is a superset (which would not otherwise ahppen as an element is removed instead)
                         else:        
                                 j += 1
@@ -132,13 +129,42 @@ def bcnf(inputRelationDict):
                 if i == len(fd) and change == True:
                         change = False
                         i = 0
+        #checks if dependency preserving
+        d = False
+        #goes through every original fd
+        for j in fdCopy:
+                #s is the closure of the fd in question
+                s = set()
+                s.update(calculate_closure(fdCopy,j[0],j[0]))
+                #t is the closure given the LHS in question if we use the fds from the new tables
+                t = set()
+                change = True
+                #updates t until no change
+                while change == True:
+                        change = False
+                        #iterates through every table in fd
+                        for k in fd:
+                                #if u is smalle rthan t afterwards there was a change
+                                u = len(t)
+                                #gets the closure of a table given the original LHS
+                                t.update(calculate_closure(k,j[0],j[0]))
+                                if u < len(t):
+                                        change = True
+                #if the closure if different the decomposition must not be dependency preserving
+                if s != t:
+                        print(fdCopy)
+                        print(j)
+                        print(s)
+                        d = True
+                        break
         #prints whether dependency preserving
         if d == False:
                 print("The BCNF decomposition was dependency preserving.")
         else:
                 print("The BCNF decomposition was not dependency preserving.")
         
-                #iterates through every fd
+        fkDict = {}
+        #iterates through every fd
         for j,k in enumerate(fd):
                 #sorts attributes and converts to list
                 outputAttributes = sorted(list(attributes[j]))
@@ -156,21 +182,30 @@ def bcnf(inputRelationDict):
                 cursor.execute("Insert into OutputRelationSchemas values (?,?,?)",[name,outputAttributes,functionalDependencies])
                 #pk = primary key
                 pk = set()
-                fk = ""
-                #goes trhough atribute in LHS of fd which is the primary key
+                #goes through atribute in LHS of fd which is the primary key
                 for l in k:
                         pk.update(l[0])
+                pk = sorted(list(pk))
+                #fk = foreign key
+                fk = []
+                for l in pk:
+                        if l in fkDict:
+                                fk.append(", Foreign key ("+l+") References "+fkDict[l])
+                        else:
+                                fkDict[l] = name
+                if len(fk) == 0:
+                        fk = ""
+                else:
+                        fk = "".join(fk)
                 #joins primary key 
-                a = ",".join(sorted(list(pk)))
+                a = ",".join(pk)
                 #gets name of original table
                 b = list(inputRelationDict.keys())[option]
                 #creates table
-                cursor.execute("Create table "+name+" ("+outputAttributes+", Primary key ("+a+"))")
-                #try/except for duplicates
-                try:
-                        cursor.execute("Insert into "+name+" select "+outputAttributes+" from "+b)
-                except sqlite3.IntegrityError:
-                        continue
+                cursor.execute("Create table "+name+" ("+outputAttributes+", Primary key ("+a+")"+fk+")")
+                #insert old entries into new table replace if duplicate
+                cursor.execute("Insert  into "+name+" select distinct "+outputAttributes+" from "+b)
+
         #commits to database
         connection.commit()
         return
