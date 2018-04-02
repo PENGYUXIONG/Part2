@@ -405,7 +405,7 @@ def equivalence_user_input_collection(schemaNameList,index,F):
         while(True):
                 # Ask user to enter index of schema
                 print("Enter index to select schema for",F,"(or Finish):",end = '')
-                slctIndex = input()
+                slctIndex = input().strip()
 
                 # Check whether user enter number
                 # -Case: is not number -> back to loop
