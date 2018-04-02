@@ -42,7 +42,7 @@ def directory():
         print("\n")
         return path
 
-#simply removes , then returns attributes 
+#simply removes , then returns attributes
 def attributes_to_list(attributes):
         return attributes.split(",")
 
@@ -106,7 +106,7 @@ def bcnf(inputRelationDict):
                                 #acknowledges that a change in stored tables was made
                                 change = True
                                 #stores attruibutes for new table
-                                attributes.append(u[0].union(u[1]))                                
+                                attributes.append(u[0].union(u[1]))
                                 #k is index of fd in table
                                 k = 0
                                 #goes through every fd in table
@@ -121,7 +121,7 @@ def bcnf(inputRelationDict):
                                         else:
                                                 k += 1
                         #increments index if s is a superset (which would not otherwise ahppen as an element is removed instead)
-                        else:        
+                        else:
                                 j += 1
                 #goes to next table
                 i += 1
@@ -162,13 +162,13 @@ def bcnf(inputRelationDict):
                 print("The BCNF decomposition was dependency preserving.")
         else:
                 print("The BCNF decomposition was not dependency preserving.")
-        
+
         fkDict = {}
         #iterates through every fd
         for j,k in enumerate(fd):
                 #sorts attributes and converts to list
                 outputAttributes = sorted(list(attributes[j]))
-                #formats name to rel_... 
+                #formats name to rel_...
                 name = list(inputRelationDict.keys())[option]+"_"+"_".join(outputAttributes)
                 #joins output attributes into string
                 outputAttributes = ",".join(outputAttributes)
@@ -197,7 +197,7 @@ def bcnf(inputRelationDict):
                         fk = ""
                 else:
                         fk = "".join(fk)
-                #joins primary key 
+                #joins primary key
                 a = ",".join(pk)
                 #gets name of original table
                 b = list(inputRelationDict.keys())[option]
@@ -210,7 +210,7 @@ def bcnf(inputRelationDict):
         connection.commit()
         return
 
-def closure(inputRelationDict):
+def Closure(inputRelationDict):
         # get input attributes
         attributes = set(input("enter the attributes:\n (seperate with a comma between each attribute)\n").split(","))
         cursor.execute("SELECT Name FROM InputRelationSchemas")
@@ -220,8 +220,16 @@ def closure(inputRelationDict):
             print(str(i+1) + ". " + schemas[i][0])
 
         # get input schemas
-        Choices = input("Select the schema(s) by enter the number\n").split(",")
+        Choices = input("Select the schema(s) by enter the number\n (seperate with a comma between each attribute)\n").split(",")
 
+        # make sure input is valid
+        for i in Choices:
+            if i.isdigit() == False:
+                print("schema cannot be blank")
+                Closure(inputRelationDict)
+                return
+
+        # get schemas
         Schemas = []
         for choice in Choices:
             Schemas.append(schemas[int(choice)-1][0])
@@ -246,6 +254,8 @@ def closure(inputRelationDict):
         closure = calculate_closure(FDs, attributes, closure)
         attributes = sorted(list(attributes))
         closure = sorted(list(closure))
+
+        # transform to right output format
         print("\nattributes: {" , end = "")
         for i in range(0, len(attributes)-1):
             print(attributes[i] + ',', end = "")
@@ -369,7 +379,7 @@ def calculate_closure(FDs, attributes, closure):
         # not change means the search is over, return result
         if change == False:
             return closure
-        # add attributes in 
+        # add attributes in
         attributes = attributes | closure
         closure = calculate_closure(FDs, attributes, closure)
 
@@ -440,7 +450,7 @@ def main_interface():
                         elif option == '1':
                                 bcnf(inputRelationDict)
                         elif option == '2':
-                                closure(inputRelationDict)
+                                Closure(inputRelationDict)
                         elif option == '3':
                                 equivalence(inputRelationDict)
                         else:
