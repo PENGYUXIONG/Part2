@@ -534,7 +534,7 @@ def main_interface():
                         elif option == '1':
                                 bcnf(inputRelationDict)
                         elif option == '2':
-                                closure(inputRelationDict)
+                                Closure(inputRelationDict)
                         elif option == '3':
                                 equivalence(inputRelationDict)
                         else:
