@@ -352,9 +352,9 @@ def equivalence(inputRelationDict):
                 print(index,": ",schema)
                 index += 1
 
-        # Insert Exit option to list
-        schemaNameList.append("Exit")
-        print(index,": ","Exit")
+        # Insert Finish option to list
+        schemaNameList.append("(Finish)")
+        print(index,": ","(Finish)")
 
         # collect user input using function(prevent too much repeated code)
         slctNameListF1 = equivalence_user_input_collection(schemaNameList,index,"F1")
@@ -369,7 +369,7 @@ def equivalence(inputRelationDict):
         for name in slctNameListF2:
                 print(name)
 
-        # union FDs for F1 and F2 using function(prevent too much repeated code)
+        # union FDs for F1 and F2 using function(prevent too much repeated code) 
         fdListF1 = union(slctNameListF1)
         fdListF2 = union(slctNameListF2)
 
@@ -387,7 +387,6 @@ def equivalence(inputRelationDict):
                         # -Case: not in closure -> save result as False
                         if not fd[1].issubset(closure):
                                 boolAllInF1 = False
-                                print("F1",fd)
                                 break
 
         # compare FDs in F2 to F1
@@ -404,7 +403,6 @@ def equivalence(inputRelationDict):
                         # -Case: not in closure -> save result as False
                         if not fd[1].issubset(closure):
                                 boolAllInF2 = False
-                                print("F2",fd)
                                 break
 
         # Check result
@@ -416,7 +414,7 @@ def equivalence(inputRelationDict):
                 result = "ARE NOT"
 
         # Print out solution
-        print("Two sets of functional dependencies F1 and F2 " + result + " equivalent. ")
+        print("\nTwo sets of functional dependencies F1 and F2 " + result + " equivalent. \n")
 
         return
 
@@ -426,7 +424,7 @@ def equivalence(inputRelationDict):
 def union(schemaList):
         # LIst for return
         fdList = list()
-        # Check every schema in list which possible to union
+        # Check every schema in list which possible to union 
         for sch in schemaList:
                 # Get FDs from "InputRelationSchemas" using sqlite
                 cursor.execute("SELECT FDs FROM InputRelationSchemas WHERE Name = :sch", {"sch":sch})
@@ -443,7 +441,7 @@ def union(schemaList):
                         if len(fdList) != 0:
                                 boolIn = False
                                 # check whether FD exist in list
-                                # -Case: eixst -> update FD
+                                # -Case: eixst -> update FD                               
                                 for fdIndex in range(0,len(fdList)):
                                         if j == fdList[fdIndex][0]:
                                                 fdList[fdIndex][1].update(k)
@@ -482,37 +480,45 @@ def equivalence_user_input_collection(schemaNameList,index,F):
         # The list for return
         slctNameList = list()
 
-        # Ask user to continue enter schema until select Exit
+        # Ask user to continue enter schema until select Finish
         while(True):
                 # Ask user to enter index of schema
-                print("Enter index to select schema for",F,"(or exit):")
-                slctIndex = int(input())
+                print("Enter index to select schema for",F,"(or Finish):",end = '')
+                slctIndex = input().strip()
 
-                # Check whether user choose valid index
-                # -Case: index is not valid -> back to loop
-                if (slctIndex <= 0 or slctIndex > index):
-                        print("Invalid index, choose again")
-                # -Case: index is valid -> continue check
+                # Check whether user enter number
+                # -Case: is not number -> back to loop
+                if (not slctIndex.isdigit()):
+                        print("Enter only integer, choose again")
+                # -Case: is number -> continue check
                 else:
-                        # check whether schema chose before
-                        # -Case: schema already chose -> back to loop
-                        if (schemaNameList[slctIndex - 1] in slctNameList):
-                                print("The schema already selected, choose another one.")
-                        # -Case: non-repeated index -> continue check
+                        # Convert input into integer
+                        slctIndex = int(slctIndex)
+                        # Check whether user choose valid index
+                        # -Case: index is not valid -> back to loop
+                        if (slctIndex <= 0 or slctIndex > index):
+                                print("Invalid index, choose again")
+                        # -Case: index is valid -> continue check
                         else:
-                                # check whether user choose Exit
-                                # -Case: input is Exit -> continue check
-                                if (schemaNameList[slctIndex - 1] == "Exit"):
-                                        # if Exit, have user choose any schema
-                                        # -Case: no schema chose -> back to loop
-                                        if (len(slctNameList) == 0):
-                                                print("You haven't select any schema yet.")
-                                        # -Case: user have chosen schemas -> exit
-                                        else:
-                                                break
-                                # -Case: input is a valid schema name -> add to list
+                                # check whether schema chose before
+                                # -Case: schema already chose -> back to loop
+                                if (schemaNameList[slctIndex - 1] in slctNameList):
+                                        print("The schema already selected, choose another one.")
+                                # -Case: non-repeated index -> continue check
                                 else:
-                                        slctNameList.append(schemaNameList[slctIndex - 1])
+                                        # check whether user choose Finish
+                                        # -Case: input is Finish -> continue check
+                                        if (schemaNameList[slctIndex - 1] == "(Finish)"):
+                                                # if Finish, have user choose any schema
+                                                # -Case: no schema chose -> back to loop
+                                                if (len(slctNameList) == 0):
+                                                        print("You haven't select any schema yet.")
+                                                # -Case: user have chosen schemas -> Finish
+                                                else:
+                                                        break
+                                        # -Case: input is a valid schema name -> add to list
+                                        else:
+                                                slctNameList.append(schemaNameList[slctIndex - 1])
         return slctNameList
 
 
