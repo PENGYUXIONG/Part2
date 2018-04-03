@@ -43,7 +43,7 @@ def directory():
         print("\n")
         return path
 
-#simply removes , then returns attributes 
+#simply removes , then returns attributes
 def attributes_to_list(attributes):
         return attributes.split(",")
 
@@ -107,7 +107,7 @@ def bcnf(inputRelationDict):
                                 #acknowledges that a change in stored tables was made
                                 change = True
                                 #stores attruibutes for new table
-                                attributes.append(u[0].union(u[1]))                                
+                                attributes.append(u[0].union(u[1]))
                                 #k is index of fd in table
                                 k = 0
                                 #goes through every fd in table
@@ -122,7 +122,7 @@ def bcnf(inputRelationDict):
                                         else:
                                                 k += 1
                         #increments index if s is a superset (which would not otherwise ahppen as an element is removed instead)
-                        else:        
+                        else:
                                 j += 1
                 #goes to next table
                 i += 1
@@ -186,7 +186,7 @@ def bcnf(inputRelationDict):
                                 if found == False:
                                         #sorts attributes and converts to list
                                         outputAttributes = sorted(list(attributes[j]))
-                                        #formats name to rel_... 
+                                        #formats name to rel_...
                                         name = list(inputRelationDict.keys())[option]+"_"+"_".join(outputAttributes)
                                         fkDict[pk] = name
                                         #gets type for attributes
@@ -199,23 +199,23 @@ def bcnf(inputRelationDict):
                                         cursor.execute("Create table "+name+" ("+outputAttributes+", Primary key ("+pk+"))")
                                         #fetch old entries
                                         query = cursor.execute("Select "+outputAttributes+" from "+list(inputRelationDict.keys())[option]+" group by "+pk).fetchall()
-                                        #insert old entries into new table  
+                                        #insert old entries into new table
                                         for l in query:
                                                 values = ''
                                                 for m in l:
-                                                        values += ('"' + str(m) + '",')  
+                                                        values += ('"' + str(m) + '",')
                                                 values = values[:-1]
-                                                cursor.execute("Insert  into "+name+" values("+values+")")                                
+                                                cursor.execute("Insert  into "+name+" values("+values+")")
         #iterates through every fd
         for j,k in enumerate(fd):
-                
+
                 #sorts attributes and converts to list
                 outputAttributes = sorted(list(attributes[j]))
-                      
-                #formats name to rel_... 
+
+                #formats name to rel_...
                 name = list(inputRelationDict.keys())[option]+"_"+"_".join(outputAttributes)
                 #joins output attributes into string
-                
+
                 outputAttributes2 = ",".join(outputAttributes)
                 #makes string of fds in correct format
                 functionalDependencies = ""
@@ -224,7 +224,7 @@ def bcnf(inputRelationDict):
                                 functionalDependencies += "{"+",".join(sorted(list(l[0])))+"}=>{"+",".join(sorted(list(l[1])))+"}; "
                 functionalDependencies = functionalDependencies[:-2]
                 #inserts entry
-                cursor.execute("Insert into OutputRelationSchemas values (?,?,?)",[name,outputAttributes2,functionalDependencies])                
+                cursor.execute("Insert into OutputRelationSchemas values (?,?,?)",[name,outputAttributes2,functionalDependencies])
                 #sees if table exists
                 count = cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='"+name+"'").fetchall()
                 #if it does not
@@ -234,34 +234,34 @@ def bcnf(inputRelationDict):
                         #goes through atribute in LHS of fd which is the primary key
                         for l in k:
                                 pk.update(l[0])
-        
+
                         #fk = foreign key
                         fk = ""
                         #iterates through stored foreign keys
                         for l in fkDict.keys():
-                                #adds foreign key l to own foreign keys if it is a subset of its attributes 
+                                #adds foreign key l to own foreign keys if it is a subset of its attributes
                                 if l in attributes[j]:
                                         fk += ", Foreign key ("+l+") References "+fkDict[l]
-        
-                        
-                        #joins primary key 
+
+
+                        #joins primary key
                         pk = ",".join(sorted(list(pk)))
                         #gets type for attributes
                         q = cursor.execute("Pragma table_info("+list(inputRelationDict.keys())[option]+")").fetchall()
                         for m,v in enumerate(outputAttributes):
                                 for n in q:
                                         if v == n[1]:
-                                                outputAttributes[m] = v.replace(outputAttributes[m],outputAttributes[m]+" "+n[2])    
+                                                outputAttributes[m] = v.replace(outputAttributes[m],outputAttributes[m]+" "+n[2])
                         outputAttributes = ",".join(outputAttributes)
                         #creates table
                         cursor.execute("Create table "+name+" ("+outputAttributes+", Primary key ("+pk+")"+fk+")")
                         #fetch old entries
                         query = cursor.execute("Select "+outputAttributes2+" from "+list(inputRelationDict.keys())[option]+" group by "+pk).fetchall()
-                        #insert old entries into new table 
+                        #insert old entries into new table
                         for l in query:
                                 values = ''
                                 for m in l:
-                                        values += ('"' + str(m) + '",')  
+                                        values += ('"' + str(m) + '",')
                                 values = values[:-1]
                                 cursor.execute("Insert  into "+name+" values("+values+")")
 
@@ -269,7 +269,7 @@ def bcnf(inputRelationDict):
         connection.commit()
         return
 
-def closure(inputRelationDict):
+def Closure(inputRelationDict):
         # get input attributes
         attributes = set(input("enter the attributes:\n (seperate with a comma between each attribute)\n").split(","))
         cursor.execute("SELECT Name FROM InputRelationSchemas")
@@ -279,8 +279,16 @@ def closure(inputRelationDict):
             print(str(i+1) + ". " + schemas[i][0])
 
         # get input schemas
-        Choices = input("Select the schema(s) by enter the number\n").split(",")
+        Choices = input("Select the schema(s) by enter the number\n (seperate with a comma between each attribute)\n").split(",")
 
+        # make sure input is valid
+        for i in Choices:
+            if i.isdigit() == False:
+                print("schema cannot be blank")
+                Closure(inputRelationDict)
+                return
+
+        # get schemas
         Schemas = []
         for choice in Choices:
             Schemas.append(schemas[int(choice)-1][0])
@@ -305,6 +313,8 @@ def closure(inputRelationDict):
         closure = calculate_closure(FDs, attributes, closure)
         attributes = sorted(list(attributes))
         closure = sorted(list(closure))
+
+        # transform to right output format
         print("\nattributes: {" , end = "")
         for i in range(0, len(attributes)-1):
             print(attributes[i] + ',', end = "")
@@ -349,7 +359,7 @@ def equivalence(inputRelationDict):
         for name in slctNameListF2:
                 print(name)
 
-        # union FDs for F1 and F2 using function(prevent too much repeated code) 
+        # union FDs for F1 and F2 using function(prevent too much repeated code)
         fdListF1 = union(slctNameListF1)
         fdListF2 = union(slctNameListF2)
 
@@ -406,7 +416,7 @@ def equivalence(inputRelationDict):
 def union(schemaList):
         # LIst for return
         fdList = list()
-        # Check every schema in list which possible to union 
+        # Check every schema in list which possible to union
         for sch in schemaList:
                 # Get FDs from "InputRelationSchemas" using sqlite
                 cursor.execute("SELECT FDs FROM InputRelationSchemas WHERE Name = :sch", {"sch":sch})
@@ -423,7 +433,7 @@ def union(schemaList):
                         if len(fdList) != 0:
                                 boolIn = False
                                 # check whether FD exist in list
-                                # -Case: eixst -> update FD                               
+                                # -Case: eixst -> update FD
                                 for fdIndex in range(0,len(fdList)):
                                         if j == fdList[fdIndex][0]:
                                                 fdList[fdIndex][1].update(k)
@@ -449,7 +459,7 @@ def calculate_closure(FDs, attributes, closure):
         # not change means the search is over, return result
         if change == False:
             return closure
-        # add attributes in 
+        # add attributes in
         attributes = attributes | closure
         closure = calculate_closure(FDs, attributes, closure)
 
