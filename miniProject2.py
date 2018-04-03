@@ -41,7 +41,7 @@ def directory():
                 print(str(i)+": "+j)
         while True:
                 option = int(input("Select valid database: "))-1
-                if option > 0 and option < len(newArr):
+                if option >= 0 and option < len(newArr):
                         path = newArr[option]
                         break
                 print("Invalid key")
@@ -84,7 +84,7 @@ def bcnf(inputRelationDict):
                 option = int(input("Select schema: "))-1
                 if option >= 0 and option < len(inputRelationDict):
                         break
-                print("Invalid key")        
+                print("Invalid key")
         #converts the attributes stored in the table into a useful format
         attributes = [set(attributes_to_list(inputRelationDict[list(inputRelationDict.keys())[option]][0]))]
         #as above but with functional dependencies
@@ -369,7 +369,7 @@ def equivalence(inputRelationDict):
         for name in slctNameListF2:
                 print(name)
 
-        # union FDs for F1 and F2 using function(prevent too much repeated code) 
+        # union FDs for F1 and F2 using function(prevent too much repeated code)
         fdListF1 = union(slctNameListF1)
         fdListF2 = union(slctNameListF2)
 
@@ -424,7 +424,7 @@ def equivalence(inputRelationDict):
 def union(schemaList):
         # LIst for return
         fdList = list()
-        # Check every schema in list which possible to union 
+        # Check every schema in list which possible to union
         for sch in schemaList:
                 # Get FDs from "InputRelationSchemas" using sqlite
                 cursor.execute("SELECT FDs FROM InputRelationSchemas WHERE Name = :sch", {"sch":sch})
@@ -441,7 +441,7 @@ def union(schemaList):
                         if len(fdList) != 0:
                                 boolIn = False
                                 # check whether FD exist in list
-                                # -Case: eixst -> update FD                               
+                                # -Case: eixst -> update FD
                                 for fdIndex in range(0,len(fdList)):
                                         if j == fdList[fdIndex][0]:
                                                 fdList[fdIndex][1].update(k)
