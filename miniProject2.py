@@ -296,6 +296,9 @@ def Closure(inputRelationDict):
             if i.isdigit() == False:
                 print("schema cannot be blank")
                 Closure(inputRelationDict)
+            elif int(i) > len(schemas) or int(i) < 1:
+                print("outside range")
+                Closure(inputRelationDict)
                 return
 
         # get schemas
